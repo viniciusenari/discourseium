@@ -1,36 +1,7 @@
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
+import React from "react";
+import { useRouter } from "next/router";
 import appConfig from "../config.json";
-
-function GlobalStyle() {
-  return (
-    <style global jsx>{`
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        list-style: none;
-      }
-      body {
-        font-family: "Open Sans", sans-serif;
-      }
-      /* App fit Height */
-      html,
-      body,
-      #__next {
-        min-height: 100vh;
-        display: flex;
-        flex: 1;
-      }
-      #__next {
-        flex: 1;
-      }
-      #__next > * {
-        flex: 1;
-      }
-      /* ./App fit Height */
-    `}</style>
-  );
-}
 
 function Title(props) {
   const Tag = props.tag || "h1";
@@ -50,24 +21,13 @@ function Title(props) {
   );
 }
 
-// function HomePage() {
-//   return (
-//     <div>
-//       <GlobalStyle />
-//       <Title tag="h2">Welcome back!</Title>
-//       <h2>Discourseium by Vinicius Enari</h2>
-//     </div>
-//   );
-// }
-
-// export default HomePage;
-
 export default function HomePage() {
-  const username = "viniciusenari";
+  const [username, setUsername] = React.useState("viniciusenari");
+  const router = useRouter();
+  const imageURL = `https://github.com/${username}.png`;
 
   return (
     <>
-      <GlobalStyle />
       <Box
         styleSheet={{
           display: "flex",
@@ -102,6 +62,10 @@ export default function HomePage() {
           {/* Form */}
           <Box
             as="form"
+            onSubmit={function (event) {
+              event.preventDefault();
+              router.push("/chat");
+            }}
             styleSheet={{
               display: "flex",
               flexDirection: "column",
@@ -124,6 +88,11 @@ export default function HomePage() {
             </Text>
 
             <TextField
+              value={username}
+              onChange={function (event) {
+                const value = event.target.value;
+                setUsername(value);
+              }}
               fullWidth
               textFieldColors={{
                 neutral: {
@@ -169,7 +138,11 @@ export default function HomePage() {
                 borderRadius: "50%",
                 marginBottom: "16px",
               }}
-              src={`https://github.com/${username}.png`}
+              src={
+                username.length > 2
+                  ? `https://github.com/${username}.png`
+                  : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+              }
             />
             <Text
               variant="body4"
@@ -180,7 +153,7 @@ export default function HomePage() {
                 borderRadius: "1000px",
               }}
             >
-              {username}
+              {username.length > 2 ? username : ""}
             </Text>
           </Box>
           {/* Photo Area */}
