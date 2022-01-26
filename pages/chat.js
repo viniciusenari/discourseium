@@ -1,20 +1,23 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import React from "react";
 import appConfig from "../config.json";
+import { FaTrashAlt } from "react-icons/fa";
 
 export default function ChatPage() {
   const [message, setmessage] = React.useState("");
-  const [messageList, setmessageList] = React.useState([]);
+  const [messageList, setMessageList] = React.useState([]);
 
   function handleNewmessage(newmessage) {
-    const message = {
-      id: messageList.length + 1,
-      from: "viniciusenari",
-      text: newmessage,
-    };
+    if (message !== "") {
+      const message = {
+        id: messageList.length + 1,
+        from: "viniciusenari",
+        text: newmessage,
+      };
 
-    setmessageList([message, ...messageList]);
-    setmessage("");
+      setMessageList([message, ...messageList]);
+      setmessage("");
+    }
   }
 
   return (
@@ -58,7 +61,7 @@ export default function ChatPage() {
             padding: "16px",
           }}
         >
-          <MessageList messages={messageList} />
+          <MessageList messages={messageList} setMessageList={setMessageList} />
           <Box
             as="form"
             styleSheet={{
@@ -89,6 +92,15 @@ export default function ChatPage() {
                 backgroundColor: appConfig.theme.colors.neutrals[800],
                 marginRight: "12px",
                 color: appConfig.theme.colors.neutrals[200],
+              }}
+            />
+            <Button
+              label="Send"
+              type="submit"
+              colorVariant="neutral"
+              onClick={(event) => {
+                event.preventDefault();
+                handleNewmessage(message);
               }}
             />
           </Box>
@@ -123,6 +135,13 @@ function Header() {
 }
 
 function MessageList(props) {
+  function deleteMessage(id) {
+    const newMessageList = props.messages.filter(
+      (message) => message.id !== id
+    );
+    props.setMessageList([...newMessageList]);
+  }
+
   return (
     <Box
       tag="ul"
@@ -175,6 +194,15 @@ function MessageList(props) {
               >
                 {new Date().toLocaleDateString()}
               </Text>
+
+              <FaTrashAlt
+                cursor="pointer"
+                color="grey"
+                onClick={(event) => {
+                  event.preventDefault();
+                  deleteMessage(message.id);
+                }}
+              />
             </Box>
             {message.text}
           </Text>
