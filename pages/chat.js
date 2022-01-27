@@ -2,22 +2,41 @@ import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import React from "react";
 import appConfig from "../config.json";
 import { FaTrashAlt } from "react-icons/fa";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMxMzYzMSwiZXhwIjoxOTU4ODg5NjMxfQ.c6cHqSkB_BAtxd-JQgDqwTPXFzNaUJMs7tTFEeqswmI";
+const SUPABASE_URL = "https://rdpwldwghmviaxprwgnc.supabase.co";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
-  const [message, setmessage] = React.useState("");
+  const [message, setMessage] = React.useState("");
   const [messageList, setMessageList] = React.useState([]);
 
-  function handleNewmessage(newmessage) {
-    if (message !== "") {
-      const message = {
-        id: messageList.length + 1,
-        from: "viniciusenari",
-        text: newmessage,
-      };
+  React.useEffect(() => {
+    supabaseClient
+      .from("messages")
+      .select("*")
+      .order("id", { ascending: false })
+      .then(({ data }) => {
+        setMessageList(data);
+      });
+  }, []);
 
-      setMessageList([message, ...messageList]);
-      setmessage("");
-    }
+  function handleNewMessage(newMessage) {
+    const message = {
+      from: "vanessametonini",
+      text: newMessage,
+    };
+
+    supabaseClient
+      .from("messages")
+      .insert([message])
+      .then(({ data }) => {
+        setMessageList([data[0], ...messageList]);
+      });
+
+    setMessage("");
   }
 
   return (
@@ -73,12 +92,12 @@ export default function ChatPage() {
               value={message}
               onChange={(event) => {
                 const valor = event.target.value;
-                setmessage(valor);
+                setMessage(valor);
               }}
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
-                  handleNewmessage(message);
+                  handleNewMessage(message);
                 }
               }}
               placeholder="Write your message here..."
@@ -100,7 +119,7 @@ export default function ChatPage() {
               colorVariant="neutral"
               onClick={(event) => {
                 event.preventDefault();
-                handleNewmessage(message);
+                handleNewMessage(message);
               }}
             />
           </Box>
@@ -181,7 +200,7 @@ function MessageList(props) {
                   display: "inline-block",
                   marginRight: "8px",
                 }}
-                src={`https://github.com/viniciusenari.png`}
+                src={`https://github.com/${message.from}.png`}
               />
               <Text tag="strong">{message.from}</Text>
               <Text
