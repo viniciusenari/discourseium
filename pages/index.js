@@ -22,7 +22,7 @@ function Title(props) {
 }
 
 export default function HomePage() {
-  const [username, setUsername] = React.useState("viniciusenari");
+  const [username, setUsername] = React.useState("");
   const router = useRouter();
 
   return (
@@ -87,6 +87,7 @@ export default function HomePage() {
             </Text>
 
             <TextField
+              placeholder="Enter your GitHub username..."
               value={username}
               onChange={function (event) {
                 const value = event.target.value;
