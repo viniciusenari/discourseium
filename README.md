@@ -6,6 +6,14 @@ Online chat application. Joining the chat with your GitHub username will automat
 ![Home Screen](https://github.com/viniciusenari/discourseium/blob/master/home_page.jpg)
 
 ![Chat Screen](https://github.com/viniciusenari/discourseium/blob/master/chat_page.jpg)
+
+## Tech Stack
+* React
+* NextJS
+* JavaScript
+* HTML
+* CSS
+* Supabase
  
  
 ## Installation
