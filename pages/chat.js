@@ -2,14 +2,27 @@ import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import React from "react";
 import appConfig from "../config.json";
 import { FaTrashAlt } from "react-icons/fa";
+import { useRouter } from "next/router";
 import { createClient } from "@supabase/supabase-js";
+import { ButtonSendSticker } from "../src/components/ButtonSendSticker";
 
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMxMzYzMSwiZXhwIjoxOTU4ODg5NjMxfQ.c6cHqSkB_BAtxd-JQgDqwTPXFzNaUJMs7tTFEeqswmI";
 const SUPABASE_URL = "https://rdpwldwghmviaxprwgnc.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function realTimeMessageCatcher(addMessage) {
+  return supabaseClient
+    .from("messages")
+    .on("INSERT", (liveResponse) => {
+      addMessage(liveResponse.new);
+    })
+    .subscribe();
+}
+
 export default function ChatPage() {
+  const router = useRouter();
+  const username = router.query.username;
   const [message, setMessage] = React.useState("");
   const [messageList, setMessageList] = React.useState([]);
 
@@ -21,22 +34,32 @@ export default function ChatPage() {
       .then(({ data }) => {
         setMessageList(data);
       });
+
+    const subscription = realTimeMessageCatcher((newMessage) => {
+      setMessageList((currentMessageList) => {
+        return [newMessage, ...currentMessageList];
+      });
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   function handleNewMessage(newMessage) {
-    const message = {
-      from: "vanessametonini",
-      text: newMessage,
-    };
+    if (newMessage !== "") {
+      const message = {
+        from: username,
+        text: newMessage,
+      };
 
-    supabaseClient
-      .from("messages")
-      .insert([message])
-      .then(({ data }) => {
-        setMessageList([data[0], ...messageList]);
-      });
+      supabaseClient
+        .from("messages")
+        .insert([message])
+        .then(({ data }) => {});
 
-    setMessage("");
+      setMessage("");
+    }
   }
 
   return (
@@ -80,7 +103,11 @@ export default function ChatPage() {
             padding: "16px",
           }}
         >
-          <MessageList messages={messageList} setMessageList={setMessageList} />
+          <MessageList
+            messages={messageList}
+            setMessageList={setMessageList}
+            username={username}
+          />
           <Box
             as="form"
             styleSheet={{
@@ -114,12 +141,33 @@ export default function ChatPage() {
               }}
             />
             <Button
+              styleSheet={{
+                padding: "0 3px 0 0",
+                minWidth: "50px",
+                minHeight: "40px",
+                fontSize: "20px",
+                marginBottom: "8px",
+                marginRight: "8px",
+                lineHeight: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: appConfig.theme.colors.neutrals[300],
+                hover: {
+                  filter: "grayscale(1)",
+                },
+              }}
               label="Send"
               type="submit"
               colorVariant="neutral"
               onClick={(event) => {
                 event.preventDefault();
                 handleNewMessage(message);
+              }}
+            />
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                handleNewMessage(":sticker: " + sticker);
               }}
             />
           </Box>
@@ -154,13 +202,6 @@ function Header() {
 }
 
 function MessageList(props) {
-  function deleteMessage(id) {
-    const newMessageList = props.messages.filter(
-      (message) => message.id !== id
-    );
-    props.setMessageList([...newMessageList]);
-  }
-
   return (
     <Box
       tag="ul"
@@ -214,19 +255,56 @@ function MessageList(props) {
                 {new Date().toLocaleDateString()}
               </Text>
 
-              <FaTrashAlt
-                cursor="pointer"
-                color="grey"
-                onClick={(event) => {
-                  event.preventDefault();
-                  deleteMessage(message.id);
-                }}
+              <DeleteButton
+                message={message}
+                messages={props.messages}
+                setMessageList={props.setMessageList}
+                username={props.username}
               />
             </Box>
-            {message.text}
+            {message.text.startsWith(":sticker:") ? (
+              <Image src={message.text.replace(":sticker:", "")} />
+            ) : (
+              message.text
+            )}
           </Text>
         );
       })}
     </Box>
   );
+}
+
+function DeleteButton(props) {
+  function deleteMessage(id) {
+    try {
+      supabaseClient
+        .from("messages")
+        .delete()
+        .eq("id", id)
+        .then(({ data }) => {
+          console.log(data[0].id);
+          const newMessageList = props.messages.filter(
+            (message) => message.id !== data[0].id
+          );
+          props.setMessageList([...newMessageList]);
+        });
+    } catch (error) {
+      alert(error.error_description || error.message);
+    }
+  }
+
+  if (props.message.from === props.username) {
+    return (
+      <FaTrashAlt
+        cursor="pointer"
+        color="grey"
+        onClick={(event) => {
+          event.preventDefault();
+          deleteMessage(props.message.id);
+        }}
+      />
+    );
+  } else {
+    return null;
+  }
 }

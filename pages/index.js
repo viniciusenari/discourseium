@@ -24,7 +24,6 @@ function Title(props) {
 export default function HomePage() {
   const [username, setUsername] = React.useState("viniciusenari");
   const router = useRouter();
-  const imageURL = `https://github.com/${username}.png`;
 
   return (
     <>
@@ -64,7 +63,7 @@ export default function HomePage() {
             as="form"
             onSubmit={function (event) {
               event.preventDefault();
-              router.push("/chat");
+              router.push(`/chat?username=${username}`);
             }}
             styleSheet={{
               display: "flex",
