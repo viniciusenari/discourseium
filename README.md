@@ -25,4 +25,6 @@ Online chat application. Joining the chat with your GitHub username will automat
     $ yarn install OU npm install
 
     - Run app
-    $ yarn dev OU npm dev
+    $ yarn dev
+    or
+    $ npm dev
